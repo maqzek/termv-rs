@@ -16,7 +16,6 @@ pub struct Channel {
     pub id: Option<String>,
     pub name: Option<String>,
     pub country: Option<String>,
-    pub languages: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub is_nsfw: Option<bool>,
     #[serde(default)]
@@ -59,18 +58,8 @@ impl fmt::Display for Channel {
             .unwrap()
             .first()
             .unwrap_or(&null_string);
-        let language: &String = &self
-            .languages
-            .as_ref()
-            .unwrap()
-            .first()
-            .unwrap_or(&null_string);
         let country: &String = self.country.as_ref().unwrap_or(&null_string);
-        write!(
-            f,
-            "{:<50}  |{:<15} |{:<10} |{:<10}\n",
-            name, category, language, country
-        )
+        write!(f, "{:<50}  |{:<15} |{:<10}\n", name, category, country)
     }
 }
 
