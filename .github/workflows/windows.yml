@@ -1,0 +1,50 @@
+name: Windows
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build (release)
+        run: cargo build --release --locked
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $zip = "termv-rs-x86_64-windows.zip"
+          $staging = "stage"
+          New-Item -ItemType Directory -Path $staging -Force | Out-Null
+          Copy-Item "target\release\termv-rs.exe" $staging
+          Copy-Item "README.md" $staging
+          Compress-Archive -Path "$staging\*" -DestinationPath $zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: termv-rs-x86_64-windows
+          path: termv-rs-x86_64-windows.zip
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: termv-rs-x86_64-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
