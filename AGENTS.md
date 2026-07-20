@@ -54,7 +54,12 @@ The README is stale on this point: it advertises `TERMV_API_URL` and a single AP
 ## CI
 
 - `.github/workflows/rust.yml` — ubuntu: `cargo build --verbose` + `cargo test --verbose` on push/PR to `main`.
-- `.github/workflows/windows.yml` — windows: `cargo build --release --locked`, zips the exe + README, attaches to releases. Triggers on push/PR to `main` and on `release: created`.
-- `.github/workflows/release.yml` — on `release: created`, builds `x86_64-unknown-linux-musl` via `rust-build/rust-build.action`.
+- `.github/workflows/windows.yml` — windows: `cargo build --release --locked`, zips the exe + README, uploads as a workflow artifact on every run, and attaches the zip to a release. Triggers: push/PR to `main`, `release: created`, and `workflow_dispatch`.
+  - On push to `main` or `workflow_dispatch`: attaches to the rolling `nightly` pre-release (tag `nightly`, `prerelease: true`, `make_latest: false`). The `nightly` tag is auto-created on first run and force-moved to the latest commit on each subsequent run; assets with the same filename are overwritten by `softprops/action-gh-release@v2`.
+  - On `release: created`: attaches to that specific release using `github.ref_name` as `tag_name`, `prerelease: false`, `make_latest: true` — so manually-cut versioned releases become the "Latest" release.
+  - On `pull_request`: build-only (no release write).
+  - Requires the repo setting **Settings → Actions → General → Workflow permissions** to be "Read and write permissions", plus the in-workflow `permissions: contents: write` block (defense in depth). Without these, `softprops/action-gh-release` fails with `Resource not accessible by integration`.
+
+The previous `.github/workflows/release.yml` (linux musl via `rust-build.action`) was deleted: its bundled Rust (1.76 in v1.4.5, the latest tag) cannot parse `Cargo.lock` v4 (needs 1.78+). Windows-only releases for now.
 
 Push to CI to verify any change to `selector.rs`, `main.rs`, `m3u.rs`, or `source.rs` — local `cargo build`/`cargo check` is not possible on this machine.

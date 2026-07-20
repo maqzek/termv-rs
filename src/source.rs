@@ -1,5 +1,4 @@
 use std::fs;
-use std::io;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
@@ -65,12 +64,18 @@ fn fetch_local(path: &str, force: bool) -> Vec<Channel> {
                     .map(|d| d.as_secs())
                     .unwrap_or(0);
                 if stored_secs == mtime_secs && cache_path().exists() {
-                    return load_cache();
+                    let channels = load_cache();
+                    println!(
+                        "Playlist unchanged. Loaded {} channels from cache.",
+                        channels.len()
+                    );
+                    return channels;
                 }
             }
         }
     }
 
+    println!("Parsing {}...", path);
     let content = fs::read_to_string(path).expect("Error reading m3u file");
     let channels = m3u::parse(&content);
     save_cache(&channels);
@@ -79,6 +84,7 @@ fn fetch_local(path: &str, force: bool) -> Vec<Channel> {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     fs::write(mtime_path(), mtime_secs.to_string()).expect("Unable to write playlist.mtime");
+    println!("Loaded {} channels.", channels.len());
     channels
 }
 
@@ -96,12 +102,18 @@ fn fetch_url(url: &str, force: bool) -> Vec<Channel> {
         req
     };
 
+    println!("Fetching {}...", url);
     let resp = req
         .call()
         .expect("Could not connect to the internet. Check if your net is working");
 
     if resp.status() == 304 {
-        return load_cache();
+        let channels = load_cache();
+        println!(
+            "Playlist unchanged (304 Not Modified). Loaded {} channels from cache.",
+            channels.len()
+        );
+        return channels;
     }
 
     let etag = resp.header("etag").map(|s| s.to_string());
@@ -109,11 +121,9 @@ fn fetch_url(url: &str, force: bool) -> Vec<Channel> {
     let channels = m3u::parse(&body);
     save_cache(&channels);
     if let Some(e) = etag {
-        let _ = io::Write::write_all(
-            &mut fs::File::create(etag_path()).expect("Unable to create etag file"),
-            e.as_bytes(),
-        );
+        fs::write(etag_path(), e).expect("Unable to write playlist.etag");
     }
+    println!("Loaded {} channels.", channels.len());
     channels
 }
 

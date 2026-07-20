@@ -60,8 +60,7 @@ impl fmt::Display for Channel {
             .as_ref()
             .and_then(|c| c.first())
             .unwrap_or(&null_string);
-        let country: &String = self.country.as_ref().unwrap_or(&null_string);
-        write!(f, "{:<50}  |{:<15} |{:<10}\n", name, category, country)
+        write!(f, "{:<50}  |{:<15}", name, category)
     }
 }
 

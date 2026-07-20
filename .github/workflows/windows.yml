@@ -7,6 +7,10 @@ on:
     branches: ["main"]
   release:
     types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -38,13 +42,17 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: termv-rs-x86_64-windows
-          path: termv-rs-x86_64-windows.zip
+          path: stage
           if-no-files-found: error
 
       - name: Attach to release
-        if: github.event_name == 'release'
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'release' && github.ref_name || 'nightly' }}
+          name: ${{ github.event_name == 'release' && github.ref_name || 'Nightly Build' }}
+          prerelease: ${{ github.event_name != 'release' }}
+          make_latest: ${{ github.event_name == 'release' }}
           files: termv-rs-x86_64-windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -59,9 +59,41 @@ fn split_extinf(info: &str) -> (&str, Option<String>) {
 }
 
 fn attr_value(attrs: &str, key: &str) -> Option<String> {
-    let needle = format!("{}=\"", key);
-    let start = attrs.find(&needle)? + needle.len();
-    let rest = &attrs[start..];
-    let end = rest.find('"')?;
-    Some(rest[..end].to_string())
+    let mut search = 0;
+    while let Some(rel) = attrs[search..].find(key) {
+        let abs = search + rel;
+        let before_ok = abs == 0 || attrs.as_bytes()[abs - 1] == b' ';
+        let after = abs + key.len();
+        let after_ok = attrs.as_bytes().get(after) == Some(&b'=');
+        if before_ok && after_ok {
+            let rest = &attrs[after + 1..];
+            let value = extract_value(rest);
+            if value.is_empty() {
+                return None;
+            }
+            return Some(value);
+        }
+        search = abs + key.len();
+    }
+    None
+}
+
+fn extract_value(rest: &str) -> String {
+    let bytes = rest.as_bytes();
+    match bytes.first() {
+        Some(&b'"') => {
+            let inner = &rest[1..];
+            let end = inner.find('"').unwrap_or(inner.len());
+            inner[..end].to_string()
+        }
+        Some(&b'\'') => {
+            let inner = &rest[1..];
+            let end = inner.find('\'').unwrap_or(inner.len());
+            inner[..end].to_string()
+        }
+        _ => {
+            let end = rest.find(' ').unwrap_or(rest.len());
+            rest[..end].to_string()
+        }
+    }
 }
