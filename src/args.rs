@@ -4,14 +4,15 @@ use clap::Parser;
 #[clap(version = "0.1")]
 #[clap(after_help = "   Improve me on GitHub:\n    https://github.com/Roshan-R/termv-rs")]
 pub struct Args {
-    #[clap(default_value = "")]
-    query: String,
+    ///Path or URL to an m3u playlist. Saved for future runs if omitted later.
+    #[clap()]
+    pub m3u_source: Option<String>,
 
     ///Auto update channel list to latest version.
     #[clap(env = "TERMV_AUTO_UPDATE", default_value = "true")]
     auto_update: String,
 
-    ///  Update channel list to latest version
+    ///  Force-refresh the playlist cache (ignore ETag/mtime)
     #[clap(short, long, action)]
     pub update: bool,
 

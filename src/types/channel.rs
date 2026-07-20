@@ -52,11 +52,10 @@ impl fmt::Display for Channel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let null_string = "Null".to_string();
         let name: &String = self.name.as_ref().unwrap_or(&null_string);
-        let category: &String = &self
+        let category: &String = self
             .categories
             .as_ref()
-            .unwrap()
-            .first()
+            .and_then(|c| c.first())
             .unwrap_or(&null_string);
         let country: &String = self.country.as_ref().unwrap_or(&null_string);
         write!(f, "{:<50}  |{:<15} |{:<10}\n", name, category, country)

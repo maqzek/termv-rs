@@ -5,7 +5,7 @@ use std::time::{Duration, SystemTime};
 use crate::types::channel::Channel;
 use crate::types::stream::Stream;
 
-use crate::Config;
+use crate::types::Config;
 
 pub struct Downloader {
     config: Config,
