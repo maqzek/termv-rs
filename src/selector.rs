@@ -62,7 +62,7 @@ pub fn get_user_selection(channels: Vec<Channel>, mpv_flags: String) {
         .layout("reverse".to_string())
         .header(Some("Select channel (press Escape to exit)".to_string()))
         .no_multi(true)
-        .bind(Some(bind))
+        .bind(vec![bind])
         .build()
         .unwrap();
 
