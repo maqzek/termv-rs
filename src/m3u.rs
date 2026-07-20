@@ -64,6 +64,7 @@ pub fn parse(content: &str) -> Vec<Channel> {
                 id: None,
                 url: Some(line.to_string()),
             },
+            current_programme: None,
         };
         channels.push(channel);
     }
