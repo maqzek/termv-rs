@@ -1,13 +1,6 @@
 use args::Args;
 use clap::Parser;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
-use std::thread;
-use std::time::Duration;
 use types::Channel;
-use utils::open_mpv;
 
 mod args;
 mod downloader;
@@ -36,27 +29,10 @@ fn main() {
 
     let channels = source::fetch(&source, args.update);
 
-    let running = Arc::new(AtomicBool::new(true));
+    let filtered_channels: Vec<Channel> = channels
+        .into_iter()
+        .filter(|c| c.stream.url.is_some())
+        .collect();
 
-    let running_clone = Arc::clone(&running);
-    ctrlc::set_handler(move || {
-        running_clone.store(false, Ordering::SeqCst);
-    })
-    .expect("Error setting Ctrl+C handler");
-
-    while running.load(Ordering::SeqCst) {
-        let channel: Channel =
-            match selector::get_user_selection("".to_string(), channels.clone()) {
-                Ok(c) => c,
-                Err(_e) => break,
-            };
-
-        if let Some(stream_url) = channel.stream.url.as_ref() {
-            open_mpv(stream_url.to_string(), args.mpv_flags.clone());
-        } else {
-            eprintln!("Error: No stream found for selected channel.");
-        }
-
-        thread::sleep(Duration::from_millis(100));
-    }
+    selector::get_user_selection(filtered_channels, args.mpv_flags.clone());
 }

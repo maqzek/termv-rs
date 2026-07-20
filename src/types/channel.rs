@@ -71,6 +71,9 @@ impl SkimItem for Channel {
     }
 
     fn output(&self) -> Cow<str> {
-        Cow::Borrowed(&self.id.as_ref().unwrap())
+        match &self.stream.url {
+            Some(url) => Cow::Borrowed(url.as_str()),
+            None => Cow::Borrowed(""),
+        }
     }
 }
