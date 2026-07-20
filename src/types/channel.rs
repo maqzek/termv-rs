@@ -5,10 +5,13 @@ use std::io::Write;
 
 use super::Config;
 use serde::{Deserialize, Serialize};
+
+#[cfg(not(target_os = "windows"))]
 extern crate skim;
 
 use crate::downloader::DownloadTrait;
 use crate::{downloader::DownloadResponse, types::stream::Stream};
+#[cfg(not(target_os = "windows"))]
 use skim::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Default, Clone)]
@@ -62,6 +65,7 @@ impl fmt::Display for Channel {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
 impl SkimItem for Channel {
     fn text(&self) -> Cow<str> {
         Cow::Owned(self.to_string().clone())
