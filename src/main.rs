@@ -1,6 +1,6 @@
 use args::Args;
 use clap::Parser;
-use types::Channel;
+use types::{set_col_widths, Channel};
 
 mod args;
 mod downloader;
@@ -13,6 +13,15 @@ mod utils;
 
 fn main() {
     let args = Args::parse();
+
+    let (c1, c2) = {
+        let mut parts = args.cols.split(',');
+        (
+            parts.next().and_then(|s| s.trim().parse().ok()).unwrap_or(40),
+            parts.next().and_then(|s| s.trim().parse().ok()).unwrap_or(22),
+        )
+    };
+    set_col_widths(c1, c2);
 
     let source = match args.m3u_source {
         Some(s) => {

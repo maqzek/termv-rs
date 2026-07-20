@@ -2,6 +2,7 @@ use std::fmt;
 use std::fs;
 use std::io;
 use std::io::Write;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::Config;
 use serde::{Deserialize, Serialize};
@@ -13,6 +14,14 @@ use crate::downloader::DownloadTrait;
 use crate::{downloader::DownloadResponse, types::stream::Stream};
 #[cfg(not(target_os = "windows"))]
 use skim::prelude::*;
+
+static COL1_WIDTH: AtomicUsize = AtomicUsize::new(40);
+static COL2_WIDTH: AtomicUsize = AtomicUsize::new(22);
+
+pub fn set_col_widths(c1: usize, c2: usize) {
+    COL1_WIDTH.store(c1, Ordering::Relaxed);
+    COL2_WIDTH.store(c2, Ordering::Relaxed);
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Default, Clone)]
 pub struct Channel {
@@ -62,11 +71,13 @@ impl fmt::Display for Channel {
             .as_ref()
             .and_then(|c| c.first())
             .unwrap_or(&null_string);
+        let c1 = COL1_WIDTH.load(Ordering::Relaxed);
+        let c2 = COL2_WIDTH.load(Ordering::Relaxed);
         match &self.current_programme {
             Some(p) if !p.is_empty() => {
-                write!(f, "{} — \x1b[2m{}\x1b[0m | {}", name, p, category)
+                write!(f, "{:<c1$}  |{:<c2$}  — \x1b[90m{}\x1b[0m", name, category, p)
             }
-            _ => write!(f, "{} | {}", name, category),
+            _ => write!(f, "{:<c1$}  |{:<c2$}", name, category),
         }
     }
 }

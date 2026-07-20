@@ -12,6 +12,10 @@ pub struct Args {
     #[clap(long = "epg")]
     pub epg_source: Option<String>,
 
+    ///Column widths: name,category (default: 40,22)
+    #[clap(short = 'c', long = "cols", default_value = "40,22")]
+    pub cols: String,
+
     ///Auto update channel list to latest version.
     #[clap(env = "TERMV_AUTO_UPDATE", default_value = "true")]
     auto_update: String,
