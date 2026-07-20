@@ -75,7 +75,7 @@ impl fmt::Display for Channel {
         let c2 = COL2_WIDTH.load(Ordering::Relaxed);
         match &self.current_programme {
             Some(p) if !p.is_empty() => {
-                write!(f, "{:<c1$}  |{:<c2$}  — \x1b[90m{}\x1b[0m", name, category, p)
+                write!(f, "{:<c1$}  |{:<c2$}  — \x1b[38;5;245m{}\x1b[0m", name, category, p)
             }
             _ => write!(f, "{:<c1$}  |{:<c2$}", name, category),
         }

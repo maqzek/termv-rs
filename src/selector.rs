@@ -27,6 +27,7 @@ pub fn get_user_selection(channels: Vec<Channel>, mpv_flags: String) {
         .args([
             "--reverse",
             "--ansi",
+            "--exact",
             "--delimiter=\t",
             "--with-nth=2..",
             "--bind",
@@ -64,6 +65,7 @@ pub fn get_user_selection(channels: Vec<Channel>, mpv_flags: String) {
         .header(Some("Select channel (press Escape to exit)".to_string()))
         .no_multi(true)
         .ansi(true)
+        .exact(true)
         .bind(vec![bind])
         .build()
         .unwrap();

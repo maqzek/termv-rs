@@ -3,12 +3,14 @@ use std::fs;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-use chrono::Utc;
+use chrono::{Local, TimeZone, Utc};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 
 struct Programme {
     title: String,
+    start: i64,
+    stop: i64,
 }
 
 pub struct EpgData {
@@ -20,7 +22,14 @@ impl EpgData {
     pub fn current_programme_for_name(&self, name: &str) -> Option<String> {
         let id = self.name_to_id.get(name)?;
         let programme = self.current.get(id)?;
-        Some(programme.title.clone())
+        let start_time = Local.timestamp_opt(programme.start, 0).single()?;
+        let stop_time = Local.timestamp_opt(programme.stop, 0).single()?;
+        Some(format!(
+            "({} - {}) {}",
+            start_time.format("%H:%M"),
+            stop_time.format("%H:%M"),
+            programme.title
+        ))
     }
 }
 
@@ -177,7 +186,7 @@ fn parse_programmes<R: std::io::BufRead>(
                             if needed_ids.contains(ch) && start <= now_ts && now_ts < stop {
                                 let title = title_text.trim().to_string();
                                 if !title.is_empty() {
-                                    current.insert(ch.clone(), Programme { title });
+                                    current.insert(ch.clone(), Programme { title, start, stop });
                                 }
                             }
                         }
