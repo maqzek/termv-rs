@@ -23,6 +23,8 @@ pub struct Channel {
     pub is_nsfw: Option<bool>,
     #[serde(default)]
     pub stream: Stream,
+    #[serde(default)]
+    pub current_programme: Option<String>,
 }
 
 impl DownloadTrait for Channel {
@@ -60,7 +62,12 @@ impl fmt::Display for Channel {
             .as_ref()
             .and_then(|c| c.first())
             .unwrap_or(&null_string);
-        write!(f, "{:<50}  |{:<15}", name, category)
+        match &self.current_programme {
+            Some(p) if !p.is_empty() => {
+                write!(f, "{} — \x1b[2m{}\x1b[0m | {}", name, p, category)
+            }
+            _ => write!(f, "{} | {}", name, category),
+        }
     }
 }
 

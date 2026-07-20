@@ -8,6 +8,10 @@ pub struct Args {
     #[clap()]
     pub m3u_source: Option<String>,
 
+    ///Path or URL to an EPG (XMLTV) file. Saved for future runs if omitted later.
+    #[clap(long = "epg")]
+    pub epg_source: Option<String>,
+
     ///Auto update channel list to latest version.
     #[clap(env = "TERMV_AUTO_UPDATE", default_value = "true")]
     auto_update: String,

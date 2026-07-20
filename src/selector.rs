@@ -26,6 +26,7 @@ pub fn get_user_selection(channels: Vec<Channel>, mpv_flags: String) {
     let mut fzf = Command::new("fzf")
         .args([
             "--reverse",
+            "--ansi",
             "--delimiter=\t",
             "--with-nth=2..",
             "--bind",
@@ -62,6 +63,7 @@ pub fn get_user_selection(channels: Vec<Channel>, mpv_flags: String) {
         .layout("reverse".to_string())
         .header(Some("Select channel (press Escape to exit)".to_string()))
         .no_multi(true)
+        .ansi(true)
         .bind(vec![bind])
         .build()
         .unwrap();

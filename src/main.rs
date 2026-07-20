@@ -4,6 +4,7 @@ use types::Channel;
 
 mod args;
 mod downloader;
+mod epg;
 mod m3u;
 mod selector;
 mod source;
@@ -29,10 +30,33 @@ fn main() {
 
     let channels = source::fetch(&source, args.update);
 
-    let filtered_channels: Vec<Channel> = channels
+    let epg_source = match args.epg_source {
+        Some(s) => {
+            epg::write_saved_source(&s);
+            Some(s)
+        }
+        None => epg::read_saved_source(),
+    };
+
+    let epg_data = match epg_source {
+        Some(s) => epg::fetch(&s, args.update),
+        None => None,
+    };
+
+    let mut filtered_channels: Vec<Channel> = channels
         .into_iter()
         .filter(|c| c.stream.url.is_some())
         .collect();
+
+    if let Some(ref epg) = epg_data {
+        for channel in &mut filtered_channels {
+            if let Some(ref name) = channel.name {
+                if let Some(title) = epg.current_programme_for_name(name) {
+                    channel.current_programme = Some(title);
+                }
+            }
+        }
+    }
 
     selector::get_user_selection(filtered_channels, args.mpv_flags.clone());
 }
