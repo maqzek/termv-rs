@@ -1,9 +1,25 @@
 use crate::types::{Channel, Stream};
 
+struct Pending {
+    id: Option<String>,
+    name: Option<String>,
+    categories: Option<Vec<String>>,
+}
+
+impl Pending {
+    fn new() -> Self {
+        Pending {
+            id: None,
+            name: None,
+            categories: None,
+        }
+    }
+}
+
 pub fn parse(content: &str) -> Vec<Channel> {
     let mut channels = Vec::new();
     let mut counter: usize = 0;
-    let mut pending: Option<(Option<String>, Option<String>, Option<Vec<String>>)> = None;
+    let mut pending: Option<Pending> = None;
 
     for raw in content.lines() {
         let line = raw.trim();
@@ -16,21 +32,33 @@ pub fn parse(content: &str) -> Vec<Channel> {
                 let id = attr_value(attrs, "tvg-id");
                 let group = attr_value(attrs, "group-title");
                 let categories = group.map(|g| vec![g]);
-                pending = Some((id, name, categories));
+                pending = Some(Pending {
+                    id,
+                    name,
+                    categories,
+                });
+            } else if let Some(grp) = line.strip_prefix("#EXTGRP") {
+                let group = grp.trim_start_matches(':').trim();
+                if !group.is_empty() {
+                    let entry = pending.get_or_insert_with(Pending::new);
+                    if entry.categories.is_none() {
+                        entry.categories = Some(vec![group.to_string()]);
+                    }
+                }
             }
             continue;
         }
 
-        let (id_opt, name_opt, categories_opt) = pending.take().unwrap_or((None, None, None));
-        let id = id_opt.unwrap_or_else(|| {
+        let mut entry = pending.take().unwrap_or_else(Pending::new);
+        let id = entry.id.take().unwrap_or_else(|| {
             counter += 1;
             format!("_synthetic_{}", counter)
         });
         let channel = Channel {
             id: Some(id),
-            name: name_opt,
+            name: entry.name,
             country: None,
-            categories: categories_opt,
+            categories: entry.categories,
             is_nsfw: None,
             stream: Stream {
                 id: None,
